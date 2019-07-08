@@ -1,0 +1,44 @@
+##############################################################################
+#
+# Lua syntax highlighting for Nano.
+#
+# Author:  ASoS Gaming
+# License: GPL 2  or later
+#
+# Version: 2019-07-04
+#
+##############################################################################
+
+
+# Automatically use for '.asos.log' files
+syntax "ASoS" ".*\.asos\.log$"
+
+color brightyellow " FILE -.*$"
+color yellow " FILE -"
+
+color brightblue " WALL -.*$"
+color blue " WALL -"
+
+color white " CMD  -.*$"
+color brightwhite " CMD  -"
+
+color brightblack " OUT  -.*$"
+color white " OUT  -"
+
+color brightblack " YUM  -.*$"
+color white " YUM  -"
+
+color brightgreen " SVC  -.*$"
+color green " SVC  -"
+
+color brightred " ERR  -.*$"
+color red " ERR  -"
+
+color brightcyan " DB   -.*$"
+color cyan " DB   -"
+
+#07/04/19 12:44:30 00167
+color brightblack "[0-9][0-9]/[0-9][0-9]/[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [0-9][0-9][0-9][0-9][0-9]"
+color white "[0-9][0-9]/[0-9][0-9]/[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]"
+
+color white " - "
