@@ -1,3 +1,4 @@
+#
 syntax "SH" "\.sh$" "\.bashrc" "bashrc" "\.bash_aliases" "bash_aliases" "\.bash_functions" "bash_functions" "\.bash_login" "\.bash_logout" "\.bash_pro$
 header "^#!.*/(env +)?(ba)?sh( |$)"
 ## keywords:
