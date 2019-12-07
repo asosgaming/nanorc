@@ -334,7 +334,7 @@ if [ \$(echo "`cut -f1 -d ' ' /proc/loadavg` < \$threshold" | bc) -eq 1 ]; then
     printf "  \e[93m—————————————————————————————————————————————————————————————————————————————\e[39m\n"
 else
     echo
-    printf " \e[91mSystem information disabled due to load higher than $threshold\e[39m\n"
+    printf " \e[91mSystem information disabled due to load higher than \$threshold\e[39m\n"
 fi
 EOF
 echo "created /etc/update-motd.d/50-landscape-sysinfo"
@@ -349,7 +349,7 @@ while read -r line; do
     if [ "\${line:0:1}" == "0" ]; then color="\\e[39m"; else color="\\e[31m"; fi
     line="\${line//package/\${color}package}"
     line="\${line//updates/\${color}updates}"
-    echo -e "  \e[97m${line}\e[39m"
+    echo -e "  \e[97m\${line}\e[39m"
 done < <(cat \$stamp)
 EOF
 echo "created /etc/update-motd.d/90-updates-available"
