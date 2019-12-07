@@ -26,7 +26,7 @@
 
 apt-get update -y
 apt-get install -y nano wget perl git
-user="$(getent passwd "1000" | cut -d: -f1)"
+#user="$(getent passwd "1000" | cut -d: -f1)"
 
 cat << EOF > /etc/skel/.bashrc
 # ~/.bashrc: executed by bash(1) for non-login shells.
@@ -156,8 +156,10 @@ fi
 EOF
 echo "created /etc/skel/.bashrc"
 
-cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
-chown -v ${user}:${user} /home/${user}/.bashrc
+while read -r user; do
+    cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
+    chown -v ${user}:${user} /home/${user}/.bashrc
+done < <(getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
 
 cat << EOF > /root/.bashrc
 # ~/.bashrc: executed by bash(1) for non-login shells.
@@ -280,7 +282,9 @@ rm -f /etc/skel/.nanorc
 while read -r inc; do echo "include \"${inc}\"" >> /etc/skel/.nanorc; done < <(ls --color=none /usr/share/nanorc/*.nanorc)
 
 ln -fvs /etc/skel/.nanorc /root/.nanorc
-ln -fvs /etc/skel/.nanorc /home/${user}/.nanorc
+while read -r user; do
+    ln -fvs /etc/skel/.nanorc /home/${user}/.nanorc
+done < <(getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
 
 rm -vf /etc/update-motd.d/10-help-text
 
