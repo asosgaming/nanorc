@@ -28,7 +28,6 @@ apt-get update -y
 apt-get install -y nano wget perl git
 user="$(getent passwd "1000" | cut -d: -f1)"
 
-echo "Creating /etc/skel/.bashrc"
 cat << EOF > /etc/skel/.bashrc
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -155,11 +154,11 @@ if ! shopt -oq posix; then
   fi
 fi
 EOF
+echo "created /etc/skel/.bashrc"
 
 cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
 chown -v ${user}:${user} /home/${user}/.bashrc
 
-echo "Creating /root/.bashrc"
 cat << EOF > /root/.bashrc
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -267,6 +266,7 @@ fi
 #    . /etc/bash_completion
 #fi
 EOF
+echo "created /root/.bashrc"
 
 if [ -d /usr/share/nanorc ]; then
     git -C /usr/share/nanorc pull
@@ -279,10 +279,10 @@ timedatectl set-timezone America/New_York
 rm -f /etc/skel/.nanorc
 while read -r inc; do echo "include \"${inc}\"" >> /etc/skel/.nanorc; done < <(ls --color=none /usr/share/nanorc/*.nanorc)
 
-ln -s /etc/skel/.nanorc /root/.nanorc
-ln -s /etc/skel/.nanorc /home/${user}/.nanorc
+ln -fvs /etc/skel/.nanorc /root/.nanorc
+ln -fvs /etc/skel/.nanorc /home/${user}/.nanorc
 
-rm -f /etc/update-motd.d/10-help-text
+rm -vf /etc/update-motd.d/10-help-text
 
 cat << EOF > /etc/update-motd.d/00-header
 #!/bin/bash
@@ -299,6 +299,7 @@ default="\$(uname -o) \$(uname -r) \$(uname -m)"
 name=\${DISTRIB_DESCRIPTION-\$default}
 printf "\e[39mWelcome to \e[97m%s \e[39m(\e[90m%s\e[39m)\e[39m\n" "\$host" "\$name"
 EOF
+echo "created /etc/update-motd.d/00-header"
 
 cat << EOF > /etc/update-motd.d/50-landscape-sysinfo
 #!/bin/bash
@@ -329,6 +330,7 @@ else
     printf " \e[91mSystem information disabled due to load higher than $threshold\e[39m\n"
 fi
 EOF
+echo "created /etc/update-motd.d/50-landscape-sysinfo"
 
 cat << EOF > /etc/update-motd.d/90-updates-available
 #!/bin/bash
@@ -343,3 +345,4 @@ while read -r line; do
     echo -e "  \e[97m${line}\e[39m"
 done < <(cat \$stamp)
 EOF
+echo "created /etc/update-motd.d/90-updates-available"
