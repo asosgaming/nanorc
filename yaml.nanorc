@@ -1,4 +1,4 @@
-yntax "yaml" "\.ya?ml$"
+syntax "yaml" "\.ya?ml$"
 #comment "#"
 header "^---" "%YAML"
 
