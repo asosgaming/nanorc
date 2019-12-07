@@ -26,8 +26,9 @@
 
 apt-get update -y
 apt-get install -y nano wget perl git
-user="$getent passwd "1000" | cut -d: -f1)"
+user="$(getent passwd "1000" | cut -d: -f1)"
 
+echo "Creating /etc/skel/.bashrc"
 cat << EOF > /etc/skel/.bashrc
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -154,9 +155,11 @@ if ! shopt -oq posix; then
   fi
 fi
 EOF
-cp -f /etc/skel/.bashrc /home/${user}/.bashrc
-chown ${user}:${user} /home/${user}/.bashrc
 
+cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
+chown -v ${user}:${user} /home/${user}/.bashrc
+
+echo "Creating /root/.bashrc"
 cat << EOF > /root/.bashrc
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -265,7 +268,11 @@ fi
 #fi
 EOF
 
-git clone git://github.com/asosgaming/nanorc.git /usr/share/nanorc
+if [ -d /usr/share/nanorc ]; then
+    git -C /usr/share/nanorc pull
+else
+    git clone git://github.com/asosgaming/nanorc.git /usr/share/nanorc
+fi
 
 timedatectl set-timezone America/New_York
 
