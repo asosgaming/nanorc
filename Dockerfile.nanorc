@@ -11,7 +11,7 @@ color brightgreen "(\(|\)|\[|\])"
 color brightmagenta "&&"
 
 ## Comments
-icolor cyan "^[[:space:]]*#.*$"
+icolor brightblack "^[[:space:]]*#.*$"
 
 ## Blank space at EOL
 color ,green "[[:space:]]+$"
