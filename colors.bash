@@ -287,6 +287,9 @@ while read -r user; do
 done < <(getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
 
 rm -vf /etc/update-motd.d/10-help-text
+rm -vf /etc/update-motd.d/50-motd-news
+rm -vf /etc/update-motd.d/80-esm
+rm -vf /etc/update-motd.d/80-livepatch
 
 cat << EOF > /etc/update-motd.d/00-header
 #!/bin/bash
@@ -311,7 +314,7 @@ cat << EOF > /etc/update-motd.d/50-landscape-sysinfo
 cores=\$(grep -c ^processor /proc/cpuinfo 2>/dev/null)
 [ "$cores" -eq "0" ] && cores=1
 threshold="\${cores:-1}.0"
-if [ \$(echo "`cut -f1 -d ' ' /proc/loadavg` < $threshold" | bc) -eq 1 ]; then
+if [ \$(echo "`cut -f1 -d ' ' /proc/loadavg` < \$threshold" | bc) -eq 1 ]; then
     echo
     printf "  \e[39mSystem information as of \e[97m"
     printf "$(/bin/date '+%A, %B %d %I:%M%p') \e[39m(\e[90m$(/bin/date '+%Z %:z')\e[39m)\n"
