@@ -1,11 +1,11 @@
-## Here is an example for nanorc files.
-##
-syntax "Conf" "\.c[o]?nf$"
+syntax "Conf" "\.c[o]?nf$" "\.maas$"
 ## Possible errors and parameters
 ## Strings
 icolor white ""(\\.|[^"])*""
 ## Comments
-icolor brightblue "^[[:space:]]*#.*$"
+icolor brightblack "^[[:space:]]*#.*$"
 icolor cyan "^[[:space:]]*##.*$"
+icolor cyan "^[[:space:]]*#\*.*$"
+icolor cyan "^[[:space:]]*# \*.*$"
 ## Trailing spaces
 color ,green "[[:space:]]+$"
