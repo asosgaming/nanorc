@@ -25,7 +25,7 @@
 ################################################################################
 
 apt-get update -y
-apt-get install -y nano wget perl git
+apt-get install -y nano wget perl git bc landscape-common
 #user="$(getent passwd "1000" | cut -d: -f1)"
 
 cat << EOF > /etc/skel/.bashrc
@@ -338,6 +338,7 @@ else
 fi
 EOF
 echo "created /etc/update-motd.d/50-landscape-sysinfo"
+chmod -v +x /etc/update-motd.d/50-landscape-sysinfo
 
 cat << EOF > /etc/update-motd.d/90-updates-available
 #!/bin/bash
@@ -346,10 +347,31 @@ stamp="/var/lib/update-notifier/updates-available"
 
 while read -r line; do
     if [ "\$line" == "" ]; then continue; fi
-    if [ "\${line:0:1}" == "0" ]; then color="\\e[39m"; else color="\\e[31m"; fi
-    line="\${line//package/\${color}package}"
-    line="\${line//updates/\${color}updates}"
-    echo -e "  \e[97m\${line}\e[39m"
+    if [ "\${line:0:1}" == "0" ]; then color="\\e[32m"; else color="\\e[31m"; fi
+    line="\${line//package/\\\\e[39mpackage}"
+    line="\${line//updates/\\\\e[39mupdates}"
+    echo -e "  \${color}\${line}\e[39m"
 done < <(cat \$stamp)
 EOF
 echo "created /etc/update-motd.d/90-updates-available"
+
+cat << EOF > /etc/update-motd.d/91-release-upgrade
+#!/bin/bash
+
+# if the current release is under development there won't be a new one
+if [ "\$(lsb_release -sd | cut -d' ' -f4)" = "(development" ]; then
+    exit 0
+fi
+if [ -x /usr/lib/ubuntu-release-upgrader/release-upgrade-motd ]; then
+    #exec /usr/lib/ubuntu-release-upgrader/release-upgrade-motd
+    while read -r line; do
+        if [ "\$line" == "" ]; then continue; fi
+        line="\${line//New release \\'/New release \\'\\\\e[32m}"
+        line="\${line//\\' available/\\\\e[39m\\' available}"
+        line="\${line//do-release-upgrade/\\\\e[32mdo-release-upgrade\\\\e[39m}"
+        echo -e "  \e[39m\${line}\e[39m"
+    done < <(/usr/lib/ubuntu-release-upgrader/release-upgrade-motd)
+fi
+printf "  \e[93m—————————————————————————————————————————————————————————————————————————————\e[39m\n"
+EOF
+echo "created /etc/update-motd.d/91-release-upgrade"
