@@ -312,7 +312,7 @@ cat << EOF > /etc/update-motd.d/50-landscape-sysinfo
 #!/bin/bash
 
 cores=\$(grep -c ^processor /proc/cpuinfo 2>/dev/null)
-[ "$cores" -eq "0" ] && cores=1
+[ "\$cores" -eq "0" ] && cores=1
 threshold="\${cores:-1}.0"
 if [ \$(echo "`cut -f1 -d ' ' /proc/loadavg` < \$threshold" | bc) -eq 1 ]; then
     echo
@@ -320,15 +320,15 @@ if [ \$(echo "`cut -f1 -d ' ' /proc/loadavg` < \$threshold" | bc) -eq 1 ]; then
     printf "$(/bin/date '+%A, %B %d %I:%M%p') \e[39m(\e[90m$(/bin/date '+%Z %:z')\e[39m)\n"
     printf "  \e[93m—————————————————————————————————————————————————————————————————————————————\e[39m\n"
     while read -r line; do
-        line="\${line//: /\\e[96m: \\e[97m}"
-        line="\${line//System load/\\e[36mSystem load}"
-        line="\${line/Usage of /\\e[36mUsage of \\e[39m}"
-        line="\${line//Memory usage/\\e[36mMemory usage\\e[39m}"
-        line="\${line//Swap usage/\\e[36mSwap usage\\e[39m}"
-        line="\${line//Processes/\\e[36mProcesses\\e[39m}"
-        line="\${line//Users logged in/\\e[36mUsers logged in\\e[39m}"
-        line="\${line//IP address for /\\e[36mIP address for \\e[39m}"
-#        line="\${line///\\e[36m\\e[39m}"
+        line="\${line//: /\\\\e[96m: \\\\e[97m}"
+        line="\${line//System load/\\\\e[36mSystem load}"
+        line="\${line/Usage of /\\\\e[36mUsage of \\\\e[39m}"
+        line="\${line//Memory usage/\\\\e[36mMemory usage\\\\e[39m}"
+        line="\${line//Swap usage/\\\\e[36mSwap usage\\\\e[39m}"
+        line="\${line//Processes/\\\\e[36mProcesses\\\\e[39m}"
+        line="\${line//Users logged in/\\\\e[36mUsers logged in\\\\e[39m}"
+        line="\${line//IP address for /\\\\e[36mIP address for \\\\e[39m}"
+#        line="\${line///\\\\e[36m\\\\e[39m}"
         echo -e "  \$line"
     done < <(/usr/bin/landscape-sysinfo)
     printf "  \e[93m—————————————————————————————————————————————————————————————————————————————\e[39m\n"
@@ -346,7 +346,7 @@ stamp="/var/lib/update-notifier/updates-available"
 
 while read -r line; do
     if [ "\$line" == "" ]; then continue; fi
-    if [ "\${line:0:1}" == "0" ]; then color="\e[39m"; else color="\e[31m"; fi
+    if [ "\${line:0:1}" == "0" ]; then color="\\e[39m"; else color="\\e[31m"; fi
     line="\${line//package/\${color}package}"
     line="\${line//updates/\${color}updates}"
     echo -e "  \e[97m${line}\e[39m"
