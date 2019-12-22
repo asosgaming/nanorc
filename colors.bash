@@ -185,7 +185,7 @@ if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 
-if [ -z "$STY" ]; then screen -qR; fi
+#if [ -z "$STY" ]; then screen -qR; fi
 EOF
 echo "created /etc/skel/.profile"
 
