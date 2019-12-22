@@ -25,7 +25,7 @@
 ################################################################################
 
 apt-get update -y
-apt-get install -y nano wget perl git bc landscape-common
+apt-get install -y nano wget perl git bc landscape-common byobu
 #user="$(getent passwd "1000" | cut -d: -f1)"
 
 cat << EOF > /etc/skel/.bashrc
@@ -156,10 +156,45 @@ fi
 EOF
 echo "created /etc/skel/.bashrc"
 
-while read -r user; do
-    cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
-    chown -v ${user}:${user} /home/${user}/.bashrc
-done < <(getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
+cat << EOF > /etc/skel/.profile
+# ~/.profile: executed by the command interpreter for login shells.
+# This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
+# exists.
+# see /usr/share/doc/bash/examples/startup-files for examples.
+# the files are located in the bash-doc package.
+
+# the default umask is set in /etc/profile; for setting the umask
+# for ssh logins, install and configure the libpam-umask package.
+#umask 022
+
+# if running bash
+if [ -n "$BASH_VERSION" ]; then
+    # include .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+        . "$HOME/.bashrc"
+    fi
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    PATH="$HOME/bin:$PATH"
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+
+if [ -z "$STY" ]; then screen -qR; fi
+EOF
+echo "created /etc/skel/.profile"
+
+#cat << EOF > /etc/skel/.screenrc
+#startup_message off
+#hardstatus alwayslastline "%{= bR}[%{= bY}%H%{= bR}]%{= bY} %n%{= bR}:%{= bY}%t  %{= bw}%W %=%{= br}[%{= bY}%h%{= bR}]"
+#
+#EOF
+#echo "created /etc/skel/.screenrc"
 
 cat << EOF > /root/.bashrc
 # ~/.bashrc: executed by bash(1) for non-login shells.
@@ -283,8 +318,18 @@ while read -r inc; do echo "include \"${inc}\"" >> /etc/skel/.nanorc; done < <(l
 
 ln -fvs /etc/skel/.nanorc /root/.nanorc
 while read -r user; do
-    ln -fvs /etc/skel/.nanorc /home/${user}/.nanorc
+    sudo -u $user byobu-enable
+    sudo -u $user byobu-enable-prompt
+    cp -vf /etc/skel/.nanorc /home/${user}/.nanorc
+    chown -v ${user}:${user} /home/${user}/.nanorc
+    cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
+    chown -v ${user}:${user} /home/${user}/.bashrc
+    cp -vf /etc/skel/.profile /home/${user}/.profile
+    chown -v ${user}:${user} /home/${user}/.profile
+#    cp -vf /etc/skel/.screenrc /home/${user}/.screenrc
+#    chown -v ${user}:${user} /home/${user}/.screenrc
 done < <(getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
+
 
 rm -vf /etc/update-motd.d/10-help-text
 rm -vf /etc/update-motd.d/50-motd-news
@@ -347,9 +392,12 @@ stamp="/var/lib/update-notifier/updates-available"
 
 while read -r line; do
     if [ "\$line" == "" ]; then continue; fi
-    if [ "\${line:0:1}" == "0" ]; then color="\\e[32m"; else color="\\e[31m"; fi
-    line="\${line//package/\\\\e[39mpackage}"
-    line="\${line//updates/\\\\e[39mupdates}"
+    if [ "\${line:0:1}" == "0" ]; then color="\\e[36m"; else color="\\e[96m"; fi
+    line="\${line//packages can/\\\\e[39mpackage can}"
+    line="\${line//of these updates/\\\\e[39mof these updates}"
+    line="\${line//updates are/\\\\e[39mupdates are}"
+    line="\${line//updates can/\\\\e[39mupdates can}"
+    line="\${line//To see these additional updates run:/\\\\e[36mTo see these additional updates run\\\\e[96m:\\\\e[97m}"
     echo -e "  \${color}\${line}\e[39m"
 done < <(cat \$stamp)
 EOF
