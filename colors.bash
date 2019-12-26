@@ -168,24 +168,24 @@ cat << EOF > /etc/skel/.profile
 #umask 022
 
 # if running bash
-if [ -n "$BASH_VERSION" ]; then
+if [ -n "\$BASH_VERSION" ]; then
     # include .bashrc if it exists
-    if [ -f "$HOME/.bashrc" ]; then
-        . "$HOME/.bashrc"
+    if [ -f "\$HOME/.bashrc" ]; then
+        . "\$HOME/.bashrc"
     fi
 fi
 
 # set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
+if [ -d "\$HOME/bin" ] ; then
+    PATH="\$HOME/bin:$PATH"
 fi
 
 # set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
+if [ -d "\$HOME/.local/bin" ] ; then
+    PATH="\$HOME/.local/bin:$PATH"
 fi
 
-#if [ -z "$STY" ]; then screen -qR; fi
+#if [ -z "\$STY" ]; then screen -qR; fi
 EOF
 echo "created /etc/skel/.profile"
 
