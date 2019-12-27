@@ -24,11 +24,21 @@
 # curl https://raw.githubusercontent.com/asosgaming/nanorc/master/colors.bash | sudo bash  
 ################################################################################
 
-apt-get update -y
-apt-get install -y nano wget perl git bc landscape-common byobu
+sudo -v
+can_sudo=$?
+
+if [ `id -u` -eq 0 ] || [ $can_sudo -ne 0 ]; then
+    echo -e "\e[31mThis script must be run as a user with sudo privileges.\e[39m"
+    exit 1
+fi
+
+sudo apt update -y
+sudo apt install -y nano wget perl git bc landscape-common byobu
 #user="$(getent passwd "1000" | cut -d: -f1)"
 
-cat << EOF > /etc/skel/.bashrc
+tmp="/tmp/$(date +%s | sha256sum | base64 | head -c 32 ; echo)"
+
+cat << EOF > $tmp
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -154,9 +164,9 @@ if ! shopt -oq posix; then
   fi
 fi
 EOF
-echo "created /etc/skel/.bashrc"
+sudo mv -vf $tmp /etc/skel/.bashrc
 
-cat << EOF > /etc/skel/.profile
+cat << EOF > $tmp
 # ~/.profile: executed by the command interpreter for login shells.
 # This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
 # exists.
@@ -187,7 +197,7 @@ fi
 
 #if [ -z "\$STY" ]; then screen -qR; fi
 EOF
-echo "created /etc/skel/.profile"
+sudo mv -vf $tmp /etc/skel/.profile
 
 #cat << EOF > /etc/skel/.screenrc
 #startup_message off
@@ -196,7 +206,7 @@ echo "created /etc/skel/.profile"
 #EOF
 #echo "created /etc/skel/.screenrc"
 
-cat << EOF > /root/.bashrc
+cat << EOF > $tmp
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -302,41 +312,54 @@ fi
 #if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 #    . /etc/bash_completion
 #fi
+
+if [ -z "\$_motd_listed" ]; then
+  case "\$TMUX_PANE" in
+    %1) cat /run/motd.dynamic
+        export _motd_listed=yes
+        ;;
+    *)  ;;
+  esac
+  case "\$WINDOW" in
+    0) cat /run/motd.dynamic
+        export _motd_listed=yes
+        ;;
+    *)  ;;
+  esac
+fi
 EOF
-echo "created /root/.bashrc"
+sudo mv -vf $tmp /root/.bashrc
 
 if [ -d /usr/share/nanorc ]; then
-    git -C /usr/share/nanorc pull
+    sudo git -C /usr/share/nanorc pull
 else
-    git clone git://github.com/asosgaming/nanorc.git /usr/share/nanorc
+    sudo git clone git://github.com/asosgaming/nanorc.git /usr/share/nanorc
 fi
 
-timedatectl set-timezone America/New_York
+sudo timedatectl set-timezone America/New_York
 
-rm -f /etc/skel/.nanorc
-while read -r inc; do echo "include \"${inc}\"" >> /etc/skel/.nanorc; done < <(ls --color=none /usr/share/nanorc/*.nanorc)
+sudo rm -f /etc/skel/.nanorc
+while read -r inc; do 
+    echo "include \"${inc}\"" | sudo tee -a /etc/skel/.nanorc > /dev/null
+done < <(sudo ls --color=none /usr/share/nanorc/*.nanorc)
 
-ln -fvs /etc/skel/.nanorc /root/.nanorc
+sudo ln -fvs /etc/skel/.nanorc /root/.nanorc
 while read -r user; do
     sudo -u $user byobu-enable
-    sudo -u $user byobu-enable-prompt
-    cp -vf /etc/skel/.nanorc /home/${user}/.nanorc
-    chown -v ${user}:${user} /home/${user}/.nanorc
-    cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
-    chown -v ${user}:${user} /home/${user}/.bashrc
-    cp -vf /etc/skel/.profile /home/${user}/.profile
-    chown -v ${user}:${user} /home/${user}/.profile
-#    cp -vf /etc/skel/.screenrc /home/${user}/.screenrc
-#    chown -v ${user}:${user} /home/${user}/.screenrc
-done < <(getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
+    sudo cp -vf /etc/skel/.nanorc /home/${user}/.nanorc
+    sudo chown -v ${user}:${user} /home/${user}/.nanorc
+    sudo cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
+    sudo chown -v ${user}:${user} /home/${user}/.bashrc
+    sudo cp -vf /etc/skel/.profile /home/${user}/.profile
+    sudo chown -v ${user}:${user} /home/${user}/.profile
+done < <(sudo getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
 
+sudo rm -vf /etc/update-motd.d/10-help-text
+sudo rm -vf /etc/update-motd.d/50-motd-news
+sudo rm -vf /etc/update-motd.d/80-esm
+sudo rm -vf /etc/update-motd.d/80-livepatch
 
-rm -vf /etc/update-motd.d/10-help-text
-rm -vf /etc/update-motd.d/50-motd-news
-rm -vf /etc/update-motd.d/80-esm
-rm -vf /etc/update-motd.d/80-livepatch
-
-cat << EOF > /etc/update-motd.d/00-header
+cat << EOF > $tmp
 #!/bin/bash
 
 [ -r /etc/lsb-release ] && . /etc/lsb-release
@@ -351,9 +374,10 @@ default="\$(uname -o) \$(uname -r) \$(uname -m)"
 name=\${DISTRIB_DESCRIPTION-\$default}
 printf "\e[39mWelcome to \e[97m%s \e[39m(\e[90m%s\e[39m)\e[39m\n" "\$host" "\$name"
 EOF
-echo "created /etc/update-motd.d/00-header"
+sudo mv -vf $tmp /etc/update-motd.d/00-header
+sudo chmod -v +x /etc/update-motd.d/00-header
 
-cat << EOF > /etc/update-motd.d/50-landscape-sysinfo
+cat << EOF > $tmp
 #!/bin/bash
 
 cores=\$(grep -c ^processor /proc/cpuinfo 2>/dev/null)
@@ -382,10 +406,10 @@ else
     printf " \e[91mSystem information disabled due to load higher than \$threshold\e[39m\n"
 fi
 EOF
-echo "created /etc/update-motd.d/50-landscape-sysinfo"
-chmod -v +x /etc/update-motd.d/50-landscape-sysinfo
+sudo mv -vf $tmp /etc/update-motd.d/50-landscape-sysinfo
+sudo chmod -v +x /etc/update-motd.d/50-landscape-sysinfo
 
-cat << EOF > /etc/update-motd.d/90-updates-available
+cat << EOF > $tmp
 #!/bin/bash
 
 stamp="/var/lib/update-notifier/updates-available"
@@ -401,9 +425,10 @@ while read -r line; do
     echo -e "  \${color}\${line}\e[39m"
 done < <(cat \$stamp)
 EOF
-echo "created /etc/update-motd.d/90-updates-available"
+sudo mv -vf $tmp /etc/update-motd.d/90-updates-available
+sudo chmod -v +x /etc/update-motd.d/90-updates-available
 
-cat << EOF > /etc/update-motd.d/91-release-upgrade
+cat << EOF > $tmp
 #!/bin/bash
 
 # if the current release is under development there won't be a new one
@@ -422,4 +447,8 @@ if [ -x /usr/lib/ubuntu-release-upgrader/release-upgrade-motd ]; then
 fi
 printf "  \e[93m—————————————————————————————————————————————————————————————————————————————\e[39m\n"
 EOF
-echo "created /etc/update-motd.d/91-release-upgrade"
+sudo mv -vf $tmp /etc/update-motd.d/91-release-upgrade
+sudo chmod -v +x /etc/update-motd.d/91-release-upgrade
+
+byobu-enable
+exit
