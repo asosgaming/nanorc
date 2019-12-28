@@ -24,16 +24,13 @@
 # curl https://raw.githubusercontent.com/asosgaming/nanorc/master/colors.bash | sudo bash  
 ################################################################################
 
-sudo -v
-can_sudo=$?
+#if [ `id -u` -eq 0 ] || [ $can_-ne 0 ]; then
+#    echo -e "\e[31mThis script must be run as a user with privileges.\e[39m"
+#    exit 1
+#fi
 
-if [ `id -u` -eq 0 ] || [ $can_sudo -ne 0 ]; then
-    echo -e "\e[31mThis script must be run as a user with sudo privileges.\e[39m"
-    exit 1
-fi
-
-sudo apt update -y
-sudo apt install -y nano wget perl git bc landscape-common byobu
+apt update -y
+apt install -y nano wget perl git bc landscape-common byobu
 #user="$(getent passwd "1000" | cut -d: -f1)"
 
 tmp="/tmp/$(date +%s | sha256sum | base64 | head -c 32 ; echo)"
@@ -98,8 +95,11 @@ if [ -n "\$force_color_prompt" ]; then
 fi
 
 if [ "\$color_prompt" = yes ]; then
-    #PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\$ '
-    PS1='\[\033[00;32m\]\u\[\033[00;90m\]@\[\033[00;32m\]\h\[\033[01;37m\] \[\033[01;37m\][\[\033[01;34m\]\w\[\033[01;37m\]]\[\033[00;32m\]\\$\[\033[00m\] '
+    if [ "\$(hostname -s)" == "controller" ]; then
+        PS1='\[\033[00;36m\]\u\[\033[00;90m\]@\[\033[00;36m\]\h\[\033[01;37m\] \[\033[01;37m\][\[\033[01;34m\]\w\[\033[01;37m\]]\[\033[00;36m\]\\$\[\033[00m\] '
+    else
+        PS1='\[\033[00;32m\]\u\[\033[00;90m\]@\[\033[00;32m\]\h\[\033[01;37m\] \[\033[01;37m\][\[\033[01;34m\]\w\[\033[01;37m\]]\[\033[00;32m\]\\$\[\033[00m\] '
+    fi
     declare -x LS_COLORS='di=1;40;34:ln=1;40;36:so=4;40;35:pi=4;40;33:ex=1;40;32:bd=1;4;40;31:cd=1;4;40;33:su=37;41:sg=30;43:tw=30;42:ow=34;42:rs=0:mh=00:do=1;4;35:or=1;5;36;40:mi=01;05;31;40:ca=30;41:st=37;44:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.axa=01;36:*.oga=01;36:*.spx=01;36:*.xspf=01;36:*.conf=1;93:*.cnf=1;93:*.cfg=1;93:*.yaml=1;93:*.yml=1;93:*.toml=1;93'
 else
     PS1='\${debian_chroot:+(\$debian_chroot)}\u@\h:\w\\$ '
@@ -163,8 +163,23 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+if [ -z "\$_motd_listed" ]; then
+  case "\$TMUX_PANE" in
+    %1) cat /run/motd.dynamic
+        export _motd_listed=yes
+        ;;
+    *)  ;;
+  esac
+  case "\$WINDOW" in
+    0) cat /run/motd.dynamic
+        export _motd_listed=yes
+        ;;
+    *)  ;;
+  esac
+fi
 EOF
-sudo mv -vf $tmp /etc/skel/.bashrc
+mv -vf $tmp /etc/skel/.bashrc
 
 cat << EOF > $tmp
 # ~/.profile: executed by the command interpreter for login shells.
@@ -197,7 +212,7 @@ fi
 
 #if [ -z "\$STY" ]; then screen -qR; fi
 EOF
-sudo mv -vf $tmp /etc/skel/.profile
+mv -vf $tmp /etc/skel/.profile
 
 #cat << EOF > /etc/skel/.screenrc
 #startup_message off
@@ -259,8 +274,11 @@ if [ -n "\$force_color_prompt" ]; then
 fi
 
 if [ "\$color_prompt" = yes ]; then
-    #PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\$ '
-    PS1='\[\033[00;31m\]\u\[\033[00;90m\]@\[\033[00;31m\]\h\[\033[01;37m\] \[\033[01;37m\][\[\033[01;34m\]\w\[\033[01;37m\]]\[\033[00;31m\]#\[\033[00m\] '
+    if [ "\$(hostname -s)" == "controller" ]; then
+        PS1='\[\033[00;35m\]\u\[\033[00;90m\]@\[\033[00;35m\]\h\[\033[01;37m\] \[\033[01;37m\][\[\033[01;34m\]\w\[\033[01;37m\]]\[\033[00;35m\]#\[\033[00m\] '
+    else
+        PS1='\[\033[00;31m\]\u\[\033[00;90m\]@\[\033[00;31m\]\h\[\033[01;37m\] \[\033[01;37m\][\[\033[01;34m\]\w\[\033[01;37m\]]\[\033[00;31m\]#\[\033[00m\] '
+    fi
     declare -x LS_COLORS='di=1;40;34:ln=1;40;36:so=4;40;35:pi=4;40;33:ex=1;40;32:bd=1;4;40;31:cd=1;4;40;33:su=37;41:sg=30;43:tw=30;42:ow=34;42:rs=0:mh=00:do=1;4;35:or=1;5;36;40:mi=01;05;31;40:ca=30;41:st=37;44:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.axa=01;36:*.oga=01;36:*.spx=01;36:*.xspf=01;36:*.conf=1;93:*.cnf=1;93:*.cfg=1;93:*.yaml=1;93:*.yml=1;93:*.toml=1;93'
 else
     PS1='\${debian_chroot:+(\$debian_chroot)}\u@\h:\w\\$ '
@@ -312,52 +330,37 @@ fi
 #if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 #    . /etc/bash_completion
 #fi
-
-if [ -z "\$_motd_listed" ]; then
-  case "\$TMUX_PANE" in
-    %1) cat /run/motd.dynamic
-        export _motd_listed=yes
-        ;;
-    *)  ;;
-  esac
-  case "\$WINDOW" in
-    0) cat /run/motd.dynamic
-        export _motd_listed=yes
-        ;;
-    *)  ;;
-  esac
-fi
 EOF
-sudo mv -vf $tmp /root/.bashrc
+mv -vf $tmp /root/.bashrc
 
 if [ -d /usr/share/nanorc ]; then
-    sudo git -C /usr/share/nanorc pull
+    git -C /usr/share/nanorc pull
 else
-    sudo git clone git://github.com/asosgaming/nanorc.git /usr/share/nanorc
+    git clone git://github.com/asosgaming/nanorc.git /usr/share/nanorc
 fi
 
-sudo timedatectl set-timezone America/New_York
+timedatectl set-timezone America/New_York
 
-sudo rm -f /etc/skel/.nanorc
+rm -f /etc/skel/.nanorc
 while read -r inc; do 
-    echo "include \"${inc}\"" | sudo tee -a /etc/skel/.nanorc > /dev/null
-done < <(sudo ls --color=none /usr/share/nanorc/*.nanorc)
+    echo "include \"${inc}\"" | tee -a /etc/skel/.nanorc > /dev/null
+done < <(ls --color=none /usr/share/nanorc/*.nanorc)
 
-sudo ln -fvs /etc/skel/.nanorc /root/.nanorc
+ln -fvs /etc/skel/.nanorc /root/.nanorc
 while read -r user; do
-    sudo -u $user byobu-enable
-    sudo cp -vf /etc/skel/.nanorc /home/${user}/.nanorc
-    sudo chown -v ${user}:${user} /home/${user}/.nanorc
-    sudo cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
-    sudo chown -v ${user}:${user} /home/${user}/.bashrc
-    sudo cp -vf /etc/skel/.profile /home/${user}/.profile
-    sudo chown -v ${user}:${user} /home/${user}/.profile
-done < <(sudo getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
+    -u $user byobu-enable
+    cp -vf /etc/skel/.nanorc /home/${user}/.nanorc
+    chown -v ${user}:${user} /home/${user}/.nanorc
+    cp -vf /etc/skel/.bashrc /home/${user}/.bashrc
+    chown -v ${user}:${user} /home/${user}/.bashrc
+    cp -vf /etc/skel/.profile /home/${user}/.profile
+    chown -v ${user}:${user} /home/${user}/.profile
+done < <(getent passwd | grep '/bin/bash' | grep '/home' | cut -d: -f1)
 
-sudo rm -vf /etc/update-motd.d/10-help-text
-sudo rm -vf /etc/update-motd.d/50-motd-news
-sudo rm -vf /etc/update-motd.d/80-esm
-sudo rm -vf /etc/update-motd.d/80-livepatch
+rm -vf /etc/update-motd.d/10-help-text
+rm -vf /etc/update-motd.d/50-motd-news
+rm -vf /etc/update-motd.d/80-esm
+rm -vf /etc/update-motd.d/80-livepatch
 
 cat << EOF > $tmp
 #!/bin/bash
@@ -374,8 +377,8 @@ default="\$(uname -o) \$(uname -r) \$(uname -m)"
 name=\${DISTRIB_DESCRIPTION-\$default}
 printf "\e[39mWelcome to \e[97m%s \e[39m(\e[90m%s\e[39m)\e[39m\n" "\$host" "\$name"
 EOF
-sudo mv -vf $tmp /etc/update-motd.d/00-header
-sudo chmod -v +x /etc/update-motd.d/00-header
+mv -vf $tmp /etc/update-motd.d/00-header
+chmod -v +x /etc/update-motd.d/00-header
 
 cat << EOF > $tmp
 #!/bin/bash
@@ -406,8 +409,8 @@ else
     printf " \e[91mSystem information disabled due to load higher than \$threshold\e[39m\n"
 fi
 EOF
-sudo mv -vf $tmp /etc/update-motd.d/50-landscape-sysinfo
-sudo chmod -v +x /etc/update-motd.d/50-landscape-sysinfo
+mv -vf $tmp /etc/update-motd.d/50-landscape-sysinfo
+chmod -v +x /etc/update-motd.d/50-landscape-sysinfo
 
 cat << EOF > $tmp
 #!/bin/bash
@@ -425,8 +428,8 @@ while read -r line; do
     echo -e "  \${color}\${line}\e[39m"
 done < <(cat \$stamp)
 EOF
-sudo mv -vf $tmp /etc/update-motd.d/90-updates-available
-sudo chmod -v +x /etc/update-motd.d/90-updates-available
+mv -vf $tmp /etc/update-motd.d/90-updates-available
+chmod -v +x /etc/update-motd.d/90-updates-available
 
 cat << EOF > $tmp
 #!/bin/bash
@@ -447,8 +450,8 @@ if [ -x /usr/lib/ubuntu-release-upgrader/release-upgrade-motd ]; then
 fi
 printf "  \e[93m—————————————————————————————————————————————————————————————————————————————\e[39m\n"
 EOF
-sudo mv -vf $tmp /etc/update-motd.d/91-release-upgrade
-sudo chmod -v +x /etc/update-motd.d/91-release-upgrade
+mv -vf $tmp /etc/update-motd.d/91-release-upgrade
+chmod -v +x /etc/update-motd.d/91-release-upgrade
 
 byobu-enable
 exit
