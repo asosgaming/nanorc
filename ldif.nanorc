@@ -1,0 +1,21 @@
+syntax "ldif" "\.ldif$"
+#comment "#"
+header "^---" "%YAML"
+
+# Values
+color green "(:|^|\s)+\S+"
+
+# Keys
+color magenta "(^|\s+).*+\s*:(\s|$)"
+
+# Special values
+color yellow "[:-]\s+(true|false|True|False|TRUE|FALSE|null)\s*$"
+color yellow "[:-]\s+[0-9]+\.?[0-9]*(\s*($|#))"
+color yellow "(^| )!!(binary|bool|float|int|map|null|omap|seq|set|str) "
+
+# Separator
+color brightwhite "^\s+-"
+color brightwhite ":(\s|\t|$)"
+
+# Comments
+color brightblack "(^|[[:space:]])#.*$"
