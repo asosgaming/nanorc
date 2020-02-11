@@ -513,5 +513,7 @@ EOF
 mv -vf $tmp /etc/update-motd.d/91-release-upgrade
 chmod -v +x /etc/update-motd.d/91-release-upgrade
 
-byobu-enable
-exit
+#byobu-enable
+#exit
+. ~/.profile
+
